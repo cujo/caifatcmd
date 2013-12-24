@@ -305,6 +305,7 @@ static void addIntermediate(const char *line)
        again before passing on to the command issuer. */
     p_new->p_next = ac->response->p_intermediates;
     ac->response->p_intermediates = p_new;
+    LOGD("Adding inter %s", line);
 }
 
 
@@ -415,7 +416,7 @@ static void processLine(const char *line)
            Commands like AT+CMGS have a "> " prompt. */
         writeCtrlZ(ac->smsPDU);
         ac->smsPDU = NULL;
-    } else
+    } else {
         switch (ac->type) {
         case NO_RESULT:
             handleUnsolicited(line);
@@ -443,9 +444,11 @@ static void processLine(const char *line)
 
             break;
         case MULTILINE:
-
-            if (strStartsWith(line, ac->responsePrefix))
+      LOGD("Processing line %s", line);
+      if (strStartsWith(line, ac->responsePrefix)) {
+	LOGD("start!");
                 addIntermediate(line);
+      }
             else
                 handleUnsolicited(line);
 
@@ -466,6 +469,7 @@ static void processLine(const char *line)
             handleUnsolicited(line);
             break;
         }
+    }
 
     pthread_mutex_unlock(&ac->commandmutex);
 }
@@ -756,7 +760,7 @@ static void *readerLoop(void *arg)
 {
     struct atcontext *ac = NULL;
 
-    LOGE("In readerloop!!");
+    LOGD("In readerloop!!");
 
     setAtContext((struct atcontext *) arg);
     ac = getAtContext();
@@ -1148,7 +1152,7 @@ static int at_send_command_full(const char *command, ATCommandType type,
 
     struct atcontext *ac = getAtContext();
 
-    LOGE("--- %s", command);
+    LOGD("--- %s", command);
 
     if (0 != pthread_equal(ac->tid_reader, pthread_self()))
         /* Cannot be called from reader thread. */

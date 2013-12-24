@@ -21,7 +21,8 @@ include $(CLEAR_VARS)
 LOCAL_PATH := $(TOP_PATH)/libat
 LOCAL_MODULE := libat
 LOCAL_C_INCLUDES := $(LOCAL_PATH)
-LOCAL_CFLAGS := -g -DDEBUG_TRACE
+LOCAL_CFLAGS := -g 
+#-DDEBUG_TRACE 
 #-DHAVE_ANDROID_OS
 LOCAL_SRC_FILES := at_tok.c atchannel.c misc.c
 include $(BUILD_STATIC_LIBRARY)
@@ -39,3 +40,7 @@ LOCAL_CFLAGS	:= -g
 
 # include $(BUILD_SHARED_LIBRARY)
 include $(BUILD_EXECUTABLE)
+
+# Hard coded post build
+post_build: ../libs/armeabi/at-cmd
+	cp $< ../libs/armeabi/libfake.so

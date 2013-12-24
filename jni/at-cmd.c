@@ -81,27 +81,47 @@ Java_com_github_caifatcmd_MainActivity_initATIntf( JNIEnv* env,
 int main (int argc, char **argv) {
 	char *err = "No error", at_cmd[256];
 	int error, vol;
+	ATResponse *atresp = NULL;
 
 	if (argc > 1) {
 		vol = atoi(argv[1]);
 	} else {
 		vol = 8;
 	}
-	sprintf(at_cmd, "AT*EADVOL=-%d", vol);
-	printf("argc = %d, cmd = %s\n", argc, at_cmd);
+
+	if (vol == 0)
+		sprintf(at_cmd, "AT*EADVOL?");
+	else
+		sprintf(at_cmd, "AT*EADVOL=-%d", vol);
+
+	//printf("argc = %d, cmd = %s\n", argc, at_cmd);
 
 	error = initATIntf();
 
 	if (error)
 		err = strerror(error);
-	printf("FD open status: %s (%d, %d)\n", err, error, fd);
+	//printf("FD open status: %s (%d, %d)\n", err, error, fd);
 
 	if (error)
 		close(fd);
 	else {
+		int ret;
 		error = at_open(fd, NULL);
-		at_handshake();
-		at_send_command(at_cmd, NULL);
+		//at_handshake();
+		ret = at_send_command_multiline(at_cmd, "*EADVOL", &atresp);
+		if (ret < 0 || atresp->success == 0) {
+			printf("ERROR\n");
+		} else {
+			ATLine *atline;
+			atline = atresp->p_intermediates;
+			printf("OK\n");
+			while (atline) {
+				printf("RX: %s\n", atline->line);
+				atline = atline->p_next;
+			}
+		}
+		if (atresp != NULL)
+			at_response_free(atresp);
 	}
 
 	return error;
