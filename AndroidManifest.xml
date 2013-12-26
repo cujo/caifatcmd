@@ -8,6 +8,8 @@
         android:minSdkVersion="14"
         android:targetSdkVersion="18" />
 	<uses-permission android:name="android.permission.ACCESS_SUPERUSER" />
+	<uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+	
     <application
         android:allowBackup="true"
         android:icon="@drawable/ic_launcher"
@@ -18,10 +20,19 @@
             android:label="@string/app_name" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <receiver android:name="com.github.caifatcmd.RestoreSetting" >
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+
+        <service android:name="VolumeService" >
+        </service>
+
     </application>
 
 </manifest>

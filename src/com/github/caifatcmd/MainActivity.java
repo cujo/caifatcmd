@@ -1,13 +1,26 @@
+/*   
+   Copyright 2013 Narendra Acharya
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+ */
+
 package com.github.caifatcmd;
 
-import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-
-import eu.chainfire.libsuperuser.Shell;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.util.Log;
 import android.view.Menu;
 import android.view.View;
@@ -17,19 +30,21 @@ import android.widget.ProgressBar;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TextView;
-import android.widget.Toast;
 
-public class MainActivity extends Activity implements OnSeekBarChangeListener, OnClickListener {
+public class MainActivity extends Activity 
+	implements OnSeekBarChangeListener, OnClickListener {
 	private String atcmdBinary;
 	private Integer suAvail;
 	private SeekBar seekBar;
 	private ProgressBar infBar;
 	private Button applyButton;
 	private TextView logText;
-	private int MAX_VOL = 50;
 	private int gotoVolume, currentVolume;
-	private boolean suInProgress;
-	
+	private SharedPreferences pref;
+	static final String CURR_VOL_KEY = "current_volume";
+	static final String PREF_NAME = "com.github.caifatcmd";
+	static final int MAX_VOL = 50;
+/*	
 	private class SUTask extends AsyncTask<String, Void, Integer> {
 		// Below method switches on cmds passed
 		// "0": Check su and return 0 or 1
@@ -82,7 +97,7 @@ public class MainActivity extends Activity implements OnSeekBarChangeListener, O
 			infBar.setVisibility(View.INVISIBLE);
 		}
 	}
-	
+	*/
     @Override
     protected void onCreate(Bundle savedInstanceState) {
     	suAvail = 0;
@@ -96,46 +111,18 @@ public class MainActivity extends Activity implements OnSeekBarChangeListener, O
         applyButton = (Button)findViewById(R.id.apply_button);
 		seekBar = (SeekBar)findViewById(R.id.volume_bar);
 		infBar = (ProgressBar)findViewById(R.id.sutask_progress);
-        applyButton.setOnClickListener(this);
-        applyButton.setEnabled(false);
-        seekBar.setEnabled(false);
-        // Hide progress bar
-        //infBar.setVisibility(View.INVISIBLE);
         
-        logText.setText("Checking for SU...");
-        Log.d("CallVol", "Starting main thread");
-        SUTask task = new SUTask();
-        task.execute("0");
+		applyButton.setOnClickListener(this);
+        seekBar.setOnSeekBarChangeListener(this);
+        /*applyButton.setEnabled(false);
+        seekBar.setEnabled(false);*/
+        infBar.setVisibility(View.INVISIBLE);
 
-		try {
-			//while (task.getStatus() != AsyncTask.Status.FINISHED)
-			//	TimeUnit.MILLISECONDS.sleep(1);
-			suAvail = task.get();
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (ExecutionException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-        Log.d("CallVol", "After SU check");
-		if (suAvail == 0) {
-			Toast.makeText(this, "Failed getting SU permission!", Toast.LENGTH_SHORT).show();
-			logText.setText("Failed getting SU permission!");
-		} else {
-			applyButton.setEnabled(true);
-			seekBar.setEnabled(true);
-			seekBar.setOnSeekBarChangeListener(this);
-		}
-		
-		atcmdBinary = getApplicationInfo().dataDir + "/lib/" + "libfake.so";
-				//getResources().getString(R.string.atcmd_binary);
-		
-		// Get current volume
-		Integer retVal = runATCmd(0);
-		currentVolume = MAX_VOL - retVal + 1;
-		logText.setText("Current volume: " + currentVolume);
+        pref = getApplicationContext().getSharedPreferences(PREF_NAME, Context.MODE_MULTI_PROCESS);
+		currentVolume = pref.getInt(CURR_VOL_KEY, MAX_VOL);
 		seekBar.setProgress(currentVolume);
+		logText.setText("Current Volume: " + currentVolume);
+		Log.d("CallVol", "Starting with volume " + currentVolume);
     }
 
     @Override
@@ -144,7 +131,7 @@ public class MainActivity extends Activity implements OnSeekBarChangeListener, O
         getMenuInflater().inflate(R.menu.main, menu);
         return true;
     }
-    
+    /*
     // Run the AT command
     protected Integer runATCmd(Integer volume) {
     	Integer retVal = 0, vol;
@@ -170,7 +157,7 @@ public class MainActivity extends Activity implements OnSeekBarChangeListener, O
         
         return retVal;
     }
-
+*/
 	@Override
 	public void onProgressChanged(SeekBar bar, int prog, boolean fromUser) {
 		if (fromUser) {
@@ -193,18 +180,13 @@ public class MainActivity extends Activity implements OnSeekBarChangeListener, O
 
 	@Override
 	public void onClick(View v) {
-		Integer retVal;
+		Intent changeVol;
 		
-		v.setEnabled(false);
-		retVal = runATCmd(gotoVolume);
-		
-		if (retVal >= 0) {
-			v.setEnabled(true);
-			currentVolume = gotoVolume;
-			logText.setText("Current volume: " + currentVolume);
-		} else {
-			logText.setText("Volume update failed!");
-			seekBar.setProgress(currentVolume);
-		}
+		changeVol = new Intent(getApplicationContext(), VolumeService.class);
+		changeVol.putExtra(CURR_VOL_KEY, gotoVolume);
+		//v.setEnabled(false);
+		startService(changeVol);
+		currentVolume = gotoVolume;
+		logText.setText("Current Volume: " + currentVolume);
 	}
 }
