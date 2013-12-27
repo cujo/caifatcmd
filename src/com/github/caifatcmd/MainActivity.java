@@ -26,81 +26,23 @@ import android.view.Menu;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
-import android.widget.ProgressBar;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TextView;
 
 public class MainActivity extends Activity 
 	implements OnSeekBarChangeListener, OnClickListener {
-	private String atcmdBinary;
-	private Integer suAvail;
 	private SeekBar seekBar;
-	private ProgressBar infBar;
 	private Button applyButton;
-	private TextView logText;
+	private TextView logText, currVolText;
 	private int gotoVolume, currentVolume;
 	private SharedPreferences pref;
 	static final String CURR_VOL_KEY = "current_volume";
 	static final String PREF_NAME = "com.github.caifatcmd";
 	static final int MAX_VOL = 50;
-/*	
-	private class SUTask extends AsyncTask<String, Void, Integer> {
-		// Below method switches on cmds passed
-		// "0": Check su and return 0 or 1
-		// any other string: Executed in su shell
-		@Override
-		protected Integer doInBackground(String... cmds) {
-			Integer retVal = 0;
-			String prog = "0", vol = "0";
-			if (cmds.length == 2) {
-				prog = cmds[0];
-				vol = cmds[1];
-			}
-			
-			Log.d("SUTask", "Running command: " + prog + ", arg: " + vol);
-			if (prog == "0") {
-				boolean suAvail = Shell.SU.available();
-				if (suAvail) retVal = 1;
-			} else {
-				// Execute filtered set of commands
-				if (vol.matches("[0-9]+")) {
-					List<String> shellRet;
-					shellRet = Shell.SU.run(prog + " " + vol);
-					for (String i : shellRet) {
-						Log.d("SUTask", "Return string: " + i);
-						if (i.matches("ERROR")) {
-							retVal = -1;
-						} else if (i.matches("^RX.*")) {
-							String[] parts = i.split(":");
-							if (parts.length == 3) {
-								if (parts[2].startsWith(" "))
-									parts[2] = parts[2].substring(1);
-								retVal = Math.abs(Integer.parseInt(parts[2]));
-							} else
-								retVal = -1;
-						} else {
-							retVal = 0;
-						}
-					}
-				}
-			}
-			
-			return retVal;
-		}
-		@Override
-		
-		protected void onPreExecute() {
-			infBar.setVisibility(View.VISIBLE);
-		}
-		protected void onPostExecute(Integer res) {
-			infBar.setVisibility(View.INVISIBLE);
-		}
-	}
-	*/
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-    	suAvail = 0;
     	currentVolume = 0;
     	gotoVolume = 0;
     	
@@ -108,20 +50,20 @@ public class MainActivity extends Activity
         setContentView(R.layout.activity_main);
         
         logText = (TextView)findViewById(R.id.log_txt);
+        currVolText = (TextView)findViewById(R.id.curr_vol);
         applyButton = (Button)findViewById(R.id.apply_button);
 		seekBar = (SeekBar)findViewById(R.id.volume_bar);
-		infBar = (ProgressBar)findViewById(R.id.sutask_progress);
         
 		applyButton.setOnClickListener(this);
         seekBar.setOnSeekBarChangeListener(this);
         /*applyButton.setEnabled(false);
         seekBar.setEnabled(false);*/
-        infBar.setVisibility(View.INVISIBLE);
 
         pref = getApplicationContext().getSharedPreferences(PREF_NAME, Context.MODE_MULTI_PROCESS);
 		currentVolume = pref.getInt(CURR_VOL_KEY, MAX_VOL);
 		seekBar.setProgress(currentVolume);
 		logText.setText("Current Volume: " + currentVolume);
+		currVolText.setText(Integer.toString(currentVolume));
 		Log.d("CallVol", "Starting with volume " + currentVolume);
     }
 
@@ -163,6 +105,7 @@ public class MainActivity extends Activity
 		if (fromUser) {
 			Log.d("CallVolume", "Updating local volume to " + prog);
 			gotoVolume = prog;
+			currVolText.setText(Integer.toString(gotoVolume));
 		}
 	}
 
