@@ -25,10 +25,13 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.IBinder;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
 public class VolumeService extends IntentService {
+	static final public String UPDATED = "com.github.caifatcmd.VolumeService.UPDATED";
 	SharedPreferences pref;
+	LocalBroadcastManager broadcaster;
 	private int MAX_VOL = 50;
 	private String atcmdBinary;
 	private int gotoVolume, currentVolume;
@@ -85,20 +88,20 @@ public class VolumeService extends IntentService {
 		// TODO Auto-generated constructor stub
 	}
 	
-    // Run the AT command
-    protected Integer runATCmd(Integer volume) {
-    	Integer retVal = 0, vol;
-    	// Map to inverted meaning
-    	if (volume != 0)
-    		vol = MAX_VOL - volume + 1;
-    	else
-    		vol = 0;
-    	
-    	Log.d("CallVolService", "Calling AT command for " + volume);
-        SUTask task = new SUTask();
-        task.execute(atcmdBinary, Integer.toString(vol));
-        try {
-        	//while (task.getStatus() != AsyncTask.Status.FINISHED)
+	// Run the AT command
+	protected Integer runATCmd(Integer volume) {
+		Integer retVal = 0, vol;
+		// Map to inverted meaning
+		if (volume != 0)
+			vol = MAX_VOL - volume + 1;
+		else
+			vol = 0;
+		
+		Log.d("CallVolService", "Calling AT command for " + volume);
+		SUTask task = new SUTask();
+		task.execute(atcmdBinary, Integer.toString(vol));
+		try {
+			//while (task.getStatus() != AsyncTask.Status.FINISHED)
 			//	TimeUnit.MILLISECONDS.sleep(1);
 			retVal = task.get();
 		} catch (InterruptedException e) {
@@ -108,38 +111,40 @@ public class VolumeService extends IntentService {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-        
-        return retVal;
-    }
+		
+		return retVal;
+	}
 
 
 	//@Override
 	//public int onStartCommand(Intent intent, int flags, int startId) {
-    @Override
-    public void onCreate() {
+	@Override
+	public void onCreate() {
 		pref = getApplicationContext().getSharedPreferences(MainActivity.PREF_NAME, Context.MODE_MULTI_PROCESS);
-    	//pref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+		//pref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 		atcmdBinary = getApplicationInfo().dataDir + "/lib/" + "libfake.so";
 		
 		// Get current volume
 		Integer retVal = 0; // = runATCmd(0);
 		currentVolume = MainActivity.MAX_VOL; // - retVal + 1;
-        gotoVolume = pref.getInt(MainActivity.CURR_VOL_KEY, currentVolume);
-        Log.d("CallVolService", "Stored volume at " + gotoVolume);
-        
-        if (gotoVolume != currentVolume)
-        	retVal = runATCmd(gotoVolume);
+		gotoVolume = pref.getInt(MainActivity.CURR_VOL_KEY, currentVolume);
+		Log.d("CallVolService", "Stored volume at " + gotoVolume);
+		
+		if (gotoVolume != currentVolume)
+			retVal = runATCmd(gotoVolume);
 
-        if (retVal >= 0)
-        	currentVolume = gotoVolume;
-    	pref.edit().putInt(MainActivity.CURR_VOL_KEY, currentVolume).commit();
-    	//pref.edit().commit();
+		if (retVal >= 0)
+			currentVolume = gotoVolume;
+		pref.edit().putInt(MainActivity.CURR_VOL_KEY, currentVolume).commit();
+		//pref.edit().commit();
 
-        //serviceActive = true;
-        //stopSelf();
-        
-        super.onCreate();
+		//serviceActive = true;
+		//stopSelf();
+		
+		super.onCreate();
 		//return Service.START_NOT_STICKY;
+
+		broadcaster = LocalBroadcastManager.getInstance(this);
 	}
 
 	@Override
@@ -155,11 +160,14 @@ public class VolumeService extends IntentService {
 		gotoVolume = intent.getIntExtra(MainActivity.CURR_VOL_KEY, currentVolume);
 		Log.d("CallVolService", "Changing volume to " + currentVolume);
 		Integer retVal = runATCmd(gotoVolume);
-        if (retVal >= 0) {
-        	currentVolume = gotoVolume;
-        	pref.edit().putInt(MainActivity.CURR_VOL_KEY, currentVolume).commit();
-        	//pref.edit().commit();
-        	Log.d("CallVolService", "Volume applied!");
-        }
+		if (retVal >= 0) {
+			currentVolume = gotoVolume;
+			pref.edit().putInt(MainActivity.CURR_VOL_KEY, currentVolume).commit();
+			//pref.edit().commit();
+			Log.d("CallVolService", "Volume applied!");
+
+			Intent localIntent = new Intent(UPDATED);
+			broadcaster.sendBroadcast(localIntent);
+		}
 	}
 }

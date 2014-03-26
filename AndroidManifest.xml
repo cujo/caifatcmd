@@ -33,6 +33,12 @@
         <service android:name="VolumeService" >
         </service>
 
+        <receiver android:name="VolumeBroadcastReceiver">
+            <intent-filter>
+                <action android:name="android.media.VOLUME_CHANGED_ACTION"/>
+            </intent-filter>
+        </receiver>
+
     </application>
 
 </manifest>
