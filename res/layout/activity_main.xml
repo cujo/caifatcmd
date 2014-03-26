@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout android:paddingLeft="@dimen/activity_horizontal_margin" android:paddingTop="@dimen/activity_vertical_margin" android:paddingRight="@dimen/activity_horizontal_margin" android:paddingBottom="@dimen/activity_vertical_margin" android:layout_width="fill_parent" android:layout_height="fill_parent"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <Button android:id="@id/apply_button" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="52.0dip" android:text="@string/apply_button" android:layout_alignParentBottom="true" android:layout_centerHorizontal="true" />
+    <TextView android:textAppearance="?android:textAppearanceMedium" android:id="@id/log_txt" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_alignParentBottom="true" android:layout_centerHorizontal="true" />
+    <SeekBar android:id="@id/volume_bar" android:layout_width="fill_parent" android:layout_height="wrap_content" android:max="50" android:progress="1" android:layout_centerHorizontal="true" android:layout_centerVertical="true" android:rotation="270.0" />
+    <TextView android:textAppearance="?android:textAppearanceMedium" android:gravity="center" android:id="@id/status_txt" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/status_txt" android:layout_alignLeft="@id/volume_bar" android:layout_alignParentTop="true" />
+    <CheckBox android:id="@id/always_apply" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/always_apply" android:layout_above="@id/apply_button" android:layout_alignParentLeft="true" android:onClick="onCheckbox" />
+    <TextView android:textAppearance="?android:textAppearanceSmall" android:id="@id/curr_vol" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginLeft="22.0dip" android:layout_toRightOf="@id/apply_button" android:layout_alignTop="@id/volume_bar" />
+</RelativeLayout>

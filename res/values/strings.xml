@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Call Volume</string>
+    <string name="action_settings">Settings</string>
+    <string name="status_txt">Change in-call voice volume (for Moto MB865 only)</string>
+    <string name="atcmd_binary">libfake.so</string>
+    <string name="apply_button">Apply</string>
+    <string name="always_apply">Always apply</string>
+</resources>
